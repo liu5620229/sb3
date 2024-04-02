@@ -1,5 +1,4 @@
 import optuna
-import gym
 from stable_baselines3 import SAC
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
@@ -8,6 +7,9 @@ from stable_baselines3.sac import MlpPolicy
 
 from envs.rand_energy_v2_0 import SysEnv
 from utils.evaluation import evaluate_policy
+import sys
+sys.path.append('C:\\Projects\\Python\\sb3\\src')
+print(sys.path)
 
 def optimize_sac(trial):
     """ 学习参数优化函数 """
