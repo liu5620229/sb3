@@ -13,9 +13,12 @@ class SysEnv(gym.Env):
         self.time_interval = np.float32(time_interval)
 
         h_avg = 1.0
-        self.MAX_DATA = self.power_to_data(self.MAX_ENERGY,h_avg)
-        self.MAX_E_i = self.MAX_ENERGY/4
+        # todo DATA值设置
+        self.MAX_DATA = self.power_to_data(self.MAX_ENERGY,h_avg) * 2
+        # self.MAX_DATA = self.power_to_data(self.MAX_ENERGY,h_avg)
+        self.MAX_E_i = np.float32(self.MAX_ENERGY/4)
         self.MAX_D_i = self.power_to_data(self.MAX_E_i,h_avg)
+        # self.MAX_D_i = self.power_to_data(self.MAX_E_i,h_avg)
 
         # Enow Ei Hi Dnow Di
         self.observation_space = spaces.Box(low=np.array([0, 0, 0, 0, 0]),
@@ -54,6 +57,7 @@ class SysEnv(gym.Env):
         return self.observation, {}
 
     def step(self, action):
+        # 加入动作剪裁试试
 
         assert not np.isnan(action[0])
         action = action[0]
@@ -62,32 +66,34 @@ class SysEnv(gym.Env):
         p_send = action
 
         energy_upper_bound = self.observation[0]
-        data_send = self.power_to_data(p_send,self.observation[2])
+        data_send = self.power_to_data(p_send, self.observation[2])
         data_upper_bound = self.observation[3] # rest_data
 
 
         #todo 或许可以对于违法动作给予惩罚，降低奖励，可以考虑设置惩罚为action-upper
 
-        # 在评估模式时，只有truncated才算结束，terminated不算结束
-        # 违法超出值  excessive_amount = 0
+        # 设置为truncated，因为考虑长期吞吐量最大化的问题，设置的结尾不是真正的结尾
+        # 如果问题改为设定一个终止时间的吞吐量最大化，那么结束属于terminated，没有接下来的状态和奖励了，这个时候应该把时隙的排序也作为状态输入
+        # 违法超出值  excessive_amount
         # 能量溢出值  buffer_overflow
         # 惩罚之和
-        penalty = 0
         energy_excessive_amount = 0
         data_excessive_amount = 0
 
         # 检验动作是否违法
         if p_send * self.time_interval > energy_upper_bound or \
-                data_send > data_upper_bound:
+                data_send - data_upper_bound > 0: # 防止精度问题产生的误判
             # np.PINF代表初始时无限制，也方便后面比较选小的那个
             p_send_energy_constraint = np.PINF
             data_send_energy_constraint = np.PINF
             data_send_data_constraint = np.PINF
             p_send_data_constraint = np.PINF
+
             # todo 有可能转换完后，rest_energy或者rest_data出现负的状态，那就在这里面clip一下
+            # 也可以不clip，略微超过动作空间gym不会报错，只要负值不影响代码逻辑就好
             # 能量违法
             if p_send * self.time_interval > energy_upper_bound:
-                print("能量违法")
+                # print("能量违法")
                 #能量违法溢出量
                 energy_excessive_amount = p_send * self.time_interval - energy_upper_bound
                 #惩罚剪裁
@@ -99,12 +105,13 @@ class SysEnv(gym.Env):
                 data_send_energy_constraint = self.power_to_data(p_send_energy_constraint, self.observation[2])
 
             # 数据量违法
-            if data_send > data_upper_bound:
+            if data_send - data_upper_bound > 0:
+
                 data_excessive_amount = data_send - data_upper_bound
                 # 惩罚剪裁
                 data_excessive_amount = np.clip(data_excessive_amount, a_min=None, a_max=self.MAX_D_i / 5, dtype=np.float32)
 
-                print('数据违法')
+                # print('数据违法')
                 # 裁剪data到upper_bound
                 data_send_data_constraint = data_upper_bound
                 p_send_data_constraint = self.data_to_power(data_send_data_constraint, self.observation[2])
@@ -120,8 +127,16 @@ class SysEnv(gym.Env):
         # print(f"self.rest_energy:{self.rest_energy}")
         # print(f"action[0]:{self.__RP_function(action[0])}")
 
+        # 这里没有考虑buffer的最大值，后面还要对这两个进行裁剪
         new_rest_energy = self._rest_energy - p_send * self.time_interval + self._random_energy_arr[self._steps]
         new_rest_data = self._rest_data - data_send + self._random_data_arr[self._steps]
+
+        if new_rest_energy < 0:
+            # print(f'精度出现错误，rest_energy = {new_rest_energy}')
+            new_rest_energy = np.float32(0)
+        if new_rest_data < 0:
+            # print(f'精度出现错误，rest_data = {new_rest_data}'   )
+            new_rest_data = np.float32(0)
 
         # 能量溢出值
         energy_buffer_overflow = max(new_rest_energy - self.MAX_ENERGY, 0)
@@ -129,23 +144,33 @@ class SysEnv(gym.Env):
         # 检验能量是否溢出
         if energy_buffer_overflow > 0:
             # 惩罚裁剪
-            buffer_overflow = np.clip(energy_buffer_overflow, a_min=None, a_max=self.MAX_ENERGY/24,dtype=np.float32)
+            energy_buffer_overflow = np.clip(energy_buffer_overflow, a_min=None, a_max=self.MAX_ENERGY/24,dtype=np.float32)
             new_rest_energy = self.MAX_ENERGY
             # print('能量溢出')
 
-        energy_constraint_penalty = self.power_to_data(energy_excessive_amount, 1.0)
-        data_constraint_penalty = data_excessive_amount #直接把数据超出量作为惩罚，已经裁剪过
-        energy_buffer_overflow_penalty = self.power_to_data(energy_buffer_overflow, 1.0)
+        # 防止数据溢出
+        new_rest_data = min(new_rest_data, self.MAX_DATA)
 
+        # 将能量惩罚转换到数据，与数据同一量纲
+        # todo 或许也可以直接用能量进行惩罚，只要进行裁剪就好，这样可以避免对较小的违法动作的惩罚值太大，不过在数据量上限较小的情况下，没有太大意义。
+
+        energy_constraint_penalty = self.power_to_data(energy_excessive_amount, 1.0)
+        data_constraint_penalty = data_excessive_amount # 直接把数据超出量作为惩罚，已经裁剪过
+        energy_buffer_overflow_penalty = self.power_to_data(energy_buffer_overflow, 1.0) * self._rest_data * 0.3
+        
+        # if energy_buffer_overflow_penalty > 2:
+        #     print("能量溢出惩罚可能过大")
+        #     print(f"energy_buffer_overflow_penalty:{energy_buffer_overflow_penalty}")
+        #     print(f"energy_buffer_overflow:{energy_buffer_overflow}")
+
+        # 控制使用哪些惩罚 *1 代表开启 *0 代表关闭  数据溢出惩罚可能不需要
         penalty = energy_constraint_penalty * 1 + \
                   data_constraint_penalty * 1 + \
-                  energy_buffer_overflow_penalty * 0
+                  energy_buffer_overflow_penalty * 1
 
         reward = data_send - penalty  # 按照D=log2 (1+p)惩罚
 
-        #与状态有关的计算设置成float32
-        assert new_rest_energy >= 0, f'精度出现错误，rest_energy = {new_rest_energy}'
-        assert new_rest_data >= 0, f'精度出现错误，rest_data = {new_rest_data}'
+        # 与状态有关的计算设置成float32
 
         self._rest_energy = new_rest_energy
         # todo
@@ -208,24 +233,24 @@ class SysEnv(gym.Env):
             return trajectory
             # sigma设置为upper/100
 
-        return brownian_motion(self._max_episode_steps + 1, sigma=self.MAX_ENERGY / 20,
-                               upper=self.MAX_E_i)
+        return np.array(brownian_motion(self._max_episode_steps + 1, sigma=self.MAX_ENERGY / 20,
+                               upper=self.MAX_E_i),dtype=np.float32)
 
     def _random_gain_generate(self):
         # 第一种 正态分布
-        # return np.array(np.clip(
-        #     self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
-        #     a_min=0.1, a_max=1), dtype=np.float32)
+        return np.array(np.clip(
+            self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
+            a_min=0.1, a_max=1), dtype=np.float32)
 
         # 信道增益不变，算法是否有效
-        return np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
+        # return np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
         # 第二种，均匀分布
         # 第三种，随机游走
 
     def _random_data_generate(self):
 
         # 第一种，正态分布
-        # return np.array(np.clip(self.np_random.normal(self.MAX_ENERGY / 10, self.MAX_ENERGY / 20, self._max_episode_steps+1),
+        # return np.array(np.clip(self.np_random.normal(self.MAX_DATA / 5, self.MAX_DATA / 10, self._max_episode_steps+1),
         #         a_min=0, a_max=None),dtype=np.float32)
         # 第二种，均匀分布
         # 第三种，随机游走
@@ -246,9 +271,8 @@ class SysEnv(gym.Env):
             return trajectory
             # sigma设置为upper/100
 
-        return brownian_motion(self._max_episode_steps + 1, sigma=self.MAX_D_i/20,
-                               upper=self.MAX_D_i)
-
+        return np.array(brownian_motion(self._max_episode_steps + 1, sigma=self.MAX_D_i/10,
+                               upper=self.MAX_D_i), dtype=np.float32)
 
 
 

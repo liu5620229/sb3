@@ -87,6 +87,11 @@ def evaluate_policy(
     current_penalties = np.zeros(n_envs)
 
     observations = env.reset()
+    # rest = env.get_attr("rest_energy")
+    # e_arr = env.get_attr("random_energy_arr")
+    # print(rest)
+    # print(e_arr)
+    # assert False
     states = None
     episode_starts = np.ones((env.num_envs,), dtype=bool)
     while (episode_counts < episode_count_targets).any():
@@ -163,7 +168,7 @@ def evaluate_policy(
     info = {'mean_reward': mean_reward, 'std_reward': std_reward,
             'mean_data': mean_data, 'mean_penalty': mean_penalty,
             'episode_rewards': episode_rewards,'episode_lengths': episode_lengths,
-            'episode_penalties': episode_penalties}
+            'episode_penalties': episode_penalties,'episode_datas': episode_datas }
 
     if reward_threshold is not None:
         assert mean_reward > reward_threshold, "Mean reward below threshold: " f"{mean_reward:.2f} < {reward_threshold:.2f}"
