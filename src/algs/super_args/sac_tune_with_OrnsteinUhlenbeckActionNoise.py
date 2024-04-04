@@ -15,23 +15,25 @@ def optimize_sac(trial):
     """ 学习参数优化函数 """
     # 为SAC算法设置超参数的搜索空间
     gradient_steps = trial.suggest_int('gradient_steps', 1, 100)
-    learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1e-2)
+    # learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1e-2)
     batch_size = trial.suggest_categorical('batch_size', [64, 128, 256, 512])
-    buffer_size = trial.suggest_categorical('buffer_size', [10**4, 10**5, 10**6, 10**7])
+    # buffer_size = trial.suggest_categorical('buffer_size', [10**4, 10**5, 10**6, 10**7])
     learning_starts = trial.suggest_categorical('learning_starts', [0, 100, 1000, 10000, 100000])
-    tau = trial.suggest_uniform('tau', 0.001, 0.02)
-    gamma = trial.suggest_uniform('gamma', 0.98, 0.9999)
-    n_layers = trial.suggest_categorical('n_layers', [2,3,4,5])
-    layer_size = trial.suggest_categorical('layer_{i}_size', [32,64,128,256,512])
-    layer_sizes = [layer_size]*n_layers
+    # tau = trial.suggest_uniform('tau', 0.001, 0.02)
+    # gamma = trial.suggest_uniform('gamma', 0.98, 0.9999)
+    n_layers = trial.suggest_categorical('n_layers', [2, 3, 4, 5])
+    # layer_sizes = []
+    # for i in range(n_layers):
+    #     layer_size = trial.suggest_categorical(f'layer_{i}_size', [32, 64, 128, 256, 512])
+    #     layer_sizes.append(layer_size)
     # 创建MLP策略类
     policy = MlpPolicy
     # 通过修改policy_kwargs来指定不同的MLP结构
-    policy_kwargs = dict(net_arch=[dict(pi=layer_sizes, vf=layer_sizes)])
+    policy_kwargs = dicgitt(net_arch=[256]*n_layers)
     ent_coef = "auto"
 
     # 为SAC创建训练环境
-    train_env = make_vec_env(SysEnv, n_envs=16, seed=0)
+    train_env = make_vec_env(SysEnv, n_envs=4, seed=0)
 
     # 配置与环境相适应的随机噪声
     n_actions = train_env.action_space.shape[0]
@@ -40,20 +42,20 @@ def optimize_sac(trial):
     model = SAC(
         policy,
         env=train_env,
-        learning_rate=learning_rate,
-        buffer_size=buffer_size,
+        # learning_rate=learning_rate,
+        # buffer_size=buffer_size,
         learning_starts=learning_starts,
         batch_size=batch_size,
-        tau=tau,
-        gamma=gamma,
+        # tau=tau,
+        # gamma=gamma,
         ent_coef=ent_coef,
         action_noise=action_noise,
-        gradient_steps=gradient_steps,
-        # policy_kwargs=policy_kwargs,
+        # gradient_steps=gradient_steps,
+        policy_kwargs=policy_kwargs,
         verbose=0,
     )
 
-    model.learn(total_timesteps=512*500)
+    model.learn(total_timesteps=512*300)
 
 
     info = evaluate_policy(model.policy, make_vec_env(SysEnv, n_envs=2, seed=2), n_eval_episodes=2, deterministic=True)
