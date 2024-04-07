@@ -11,7 +11,7 @@ import csv
 # from stable_baselines3.common.evaluation import evaluate_policy
 from utils.evaluation import evaluate_policy
 
-from envs.rand_energy_v1_3 import SysEnv
+from envs.rand_energy_v2_0 import SysEnv
 import time
 
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     current_time = time.strftime("%m%d_%H_%M", time.localtime())
     print(current_time + 'model_saved')
     model.save(f'models/ppo/{current_time}')
-    with open('csv/p1/sac_data_rewards.csv', mode='w', newline='') as file:
+    with open('csv/p2/sac_data_rewards.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['mean_data', 'mean_reward'])
         for data_reward in data_rewards:

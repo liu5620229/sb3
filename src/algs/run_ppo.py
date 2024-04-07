@@ -11,7 +11,7 @@ import csv
 
 # Parallel environments
 
-train_env = make_vec_env(SysEnv, n_envs=4, seed=0)
+train_env = make_vec_env(SysEnv, n_envs=8, seed=0)
 
 # Separate evaluation envs, with different parameters passed via env_kwargs
 # Eval environments can be vectorized to speed up evaluation.
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     current_time = time.strftime("%m%d_%H_%M", time.localtime())
     print(current_time + 'model_saved')
     model.save(f'models/ppo/{current_time}')
-    with open('csv/ppo_data_rewards.csv', mode='w', newline='') as file:
+    with open('csv/p1/ppo_data_rewards.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['mean_data', 'mean_reward'])
         for data_reward in data_rewards:

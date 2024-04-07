@@ -1,18 +1,12 @@
-import numpy as np
-from stable_baselines3 import PPO, SAC
+from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
-from stable_baselines3.common.vec_env import SubprocVecEnv
+# from stable_baselines3.common.evaluation import evaluate_policy
+from utils.evaluation import evaluate_policy
+from envs.rand_energy_v2_0 import SysEnv
+import time
 import sys
 sys.path.append("/home/jack/lnj/sb3/src")
 import csv
-# 数据
-
-# from stable_baselines3.common.evaluation import evaluate_policy
-from utils.evaluation import evaluate_policy
-
-from envs.rand_energy_v1_3 import SysEnv
-import time
 
 
 # Parallel environments
@@ -27,34 +21,24 @@ train_env = make_vec_env(SysEnv, n_envs=8, seed=0)
 #
 # monitor_dir_eval = '/monitoring/eval'
 # eval_env = VecMonitor(eval_env, filename=monitor_dir_eval)
-n_actions = train_env.action_space.shape[0]
-action_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
-policy_kwargs = dict(net_arch=[128]*2)
+
 #初始化模型
-model = SAC(
+model = PPO(
     policy='MlpPolicy',
     env=train_env,  #使用N个环境同时训练
-    learning_rate=4e-4,
-    batch_size=256,  #采样数据量
+    learning_rate=3e-4,
+    # buffer_size=ff,
+    n_steps=512,  #运行N步后执行更新,buffer_size=n_steps*环境数量
+    batch_size=128,  #采样数据量
+    n_epochs=16,  #每次采样后训练的次数
     gamma=0.995,
-    learning_starts=100,
-    gradient_steps=10,
-    action_noise=action_noise,
-    tau=0.012,
-    # buffer_size=100000,
-    # buffer_size=1000000,
-    # ent_coef=,
-    train_freq=(10, 'step'),
-    verbose=0,
-    policy_kwargs=policy_kwargs
-)
+    verbose=0)
 
 if __name__ == '__main__':
     data_rewards = []
     for i in range(500):
         print(f'第{i}次评估{time.ctime()}')
-        info = evaluate_policy(model.policy, make_vec_env(SysEnv, n_envs=10, seed=2), n_eval_episodes=2,
-                               deterministic=True)
+        info = evaluate_policy(model.policy, make_vec_env(SysEnv, n_envs=10, seed=2), n_eval_episodes=2, deterministic=True)
         mean_r = info['mean_reward']
         mean_data = info['mean_data']
         mean_penalty = info['mean_penalty']
@@ -73,11 +57,10 @@ if __name__ == '__main__':
     current_time = time.strftime("%m%d_%H_%M", time.localtime())
     print(current_time + 'model_saved')
     model.save(f'models/ppo/{current_time}')
-    with open('csv/p1/sac_data_rewards.csv', mode='w', newline='') as file:
+    with open('csv/p2/ppo_data_rewards.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['mean_data', 'mean_reward'])
         for data_reward in data_rewards:
             writer.writerow(data_reward)
-
 
 

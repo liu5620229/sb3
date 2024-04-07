@@ -30,7 +30,7 @@ def single_max(vec_env, index):
 
     # 定义和解决问题
     prob = cp.Problem(objective, constraints)
-    prob.solve(solver='ECOS',verbose=True)
+    prob.solve(solver='SCS',verbose=True,max_iters=1000)
     # 输出结果
     # print("最优解 p:", p.value)
     print("最优值 objective", prob.value)
@@ -41,6 +41,7 @@ if __name__ == '__main__':
     n_envs=10
     vec_env = make_vec_env(SysEnv, n_envs=n_envs, seed=2)
     vec_env.reset()
+    # single_max(vec_env,2)
     for i in range(n_envs):
         data = single_max(vec_env,i)
         data_episode.append((i,data))
