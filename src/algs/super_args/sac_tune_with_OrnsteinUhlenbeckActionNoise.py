@@ -1,4 +1,5 @@
 
+import torch
 import sys
 sys.path.append("/home/jack/lnj/sb3/src")
 import optuna
@@ -16,16 +17,17 @@ def optimize_sac(trial):
     """ 学习参数优化函数 """
     # 为SAC算法设置超参数的搜索空间
     #gradient_steps = trial.suggest_int('gradient_steps', 1, 100)
-    gradient_steps = 10
+    gradient_steps = 5
     #learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1e-2)
     learning_rate = 4e-4
     #batch_size = trial.suggest_categorical('batch_size', [64, 128, 256, 512])
     batch_size = 256
     #buffer_size = trial.suggest_categorical('buffer_size', [10**4, 10**5, 10**6, 10**7])
     #learning_starts = trial.suggest_categorical('learning_starts', [0, 100, 1000, 10000, 100000])
-    #tau = trial.suggest_uniform('tau', 0.001, 0.02)
-    #gamma = trial.suggest_uniform('gamma', 0.98, 0.9999)
-    n_layers = trial.suggest_categorical('n_layers', [2, 3, 4, 5])
+    tau = trial.suggest_uniform('tau', 0.001, 0.02)
+    gamma = trial.suggest_uniform('gamma', 0.98, 0.9999)
+    #n_layers = trial.suggest_categorical('n_layers', [2, 3, 4, 5])
+    n_layers = 2
     #layer_sizes = []
     #for i in range(n_layers):
     #   layer_size = trial.suggest_categorical(f'layer_{i}_size', [32, 64, 128, 256, 512])
@@ -33,11 +35,12 @@ def optimize_sac(trial):
     # 创建MLP策略类
     policy = MlpPolicy
     # 通过修改policy_kwargs来指定不同的MLP结构
-    policy_kwargs = dict(net_arch=[256]*n_layers)
+    layer_size = trial.suggest_categorical(f'layer_size', [32, 64, 128, 256, 512])
+    policy_kwargs = dict(net_arch=[layer_size]*n_layers)
     ent_coef = "auto"
 
     # 为SAC创建训练环境
-    train_env = make_vec_env(SysEnv, n_envs=20, seed=0)
+    train_env = make_vec_env(SysEnv, n_envs=8, seed=0)
 
     # 配置与环境相适应的随机噪声
     n_actions = train_env.action_space.shape[0]
@@ -57,6 +60,7 @@ def optimize_sac(trial):
         gradient_steps=gradient_steps,
         policy_kwargs=policy_kwargs,
         verbose=0,
+        #device=device
     )
 
     model.learn(total_timesteps=512*300)
@@ -70,7 +74,7 @@ def optimize_sac(trial):
 
 # 创建一个Optuna优化器实例
 study = optuna.create_study(direction='maximize')
-study.optimize(optimize_sac, n_trials=100,n_jobs=-1)
+study.optimize(optimize_sac, n_trials=50,n_jobs=16)
 
 # 打印出最优的超参数
 print('Number of finished trials: ', len(study.trials))
