@@ -21,19 +21,18 @@ class SysEnv(gym.Env):
     @property
     def observation(self):
         # todo random energy第一步应该是0
-        return np.array([self._rest_energy, self._random_energy_arr[self._steps],
-                         self._random_gain_arr[self._steps]], dtype=np.float32)
+        return np.array([self.rest_energy, self.random_energy_arr[self._steps],
+                         self.random_gain_arr[self._steps]], dtype=np.float32)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
 
         # todo 用seed测试生成的序列是否一样
 
-        self._random_energy_arr = self._random_energy_generate()
-        self._random_gain_arr = self._random_gain_generate()
+        self.random_energy_arr = self._random_energy_generate()
+        self.random_gain_arr = self._random_gain_generate()
         self._steps = 0
-        self._rest_energy = np.float32(self.np_random.uniform(low=0, high=self.MAX_ENERGY))
-
+        self.rest_energy = 0
         # todo 始终使用同一套数据分布测试，能做到更好吗？ 可以固定seed试试，如果不行，说明算法有问题
         return self.observation, {}
 
@@ -76,7 +75,7 @@ class SysEnv(gym.Env):
 
         # print(f"self.rest_energy:{self.rest_energy}")
         # print(f"action[0]:{self.__RP_function(action[0])}")
-        new_rest_energy = self._rest_energy - p_send * self.time_interval + self._random_energy_arr[self._steps]
+        new_rest_energy = self.rest_energy - p_send * self.time_interval + self.random_energy_arr[self._steps]
 
         # 能量溢出值
         buffer_overflow = max(new_rest_energy - self.MAX_ENERGY, 0)
@@ -91,13 +90,13 @@ class SysEnv(gym.Env):
         reward = data - penalty  # 按照D=log2 (1+p)惩罚
 
         #与状态有关的计算设置成float32
-        assert new_rest_energy >= 0, '精度出现错误，rest_energy<0'
+        # assert new_rest_energy >= 0, '精度出现错误，rest_energy<0'
 
-        self._rest_energy = new_rest_energy
+        self.rest_energy = new_rest_energy
         truncated = False if self._steps + 1 < self._max_episode_steps else True
 
-        info = {'E_now': self._rest_energy, 'E_i': self._random_energy_arr[self._steps]
-            , 'c_gain': self._random_gain_arr[self._steps], 'reward': reward, 'done': truncated, 'data': data,
+        info = {'E_now': self.rest_energy, 'E_i': self.random_energy_arr[self._steps]
+            , 'c_gain': self.random_gain_arr[self._steps], 'reward': reward, 'done': truncated, 'data': data,
                 'excessive_amount': excessive_amount, 'penalty': penalty}
 
         self._steps += 1
@@ -148,12 +147,12 @@ class SysEnv(gym.Env):
 
     def _random_gain_generate(self):
         # 第一种 正态分布
-        # return np.array(np.clip(
-        #     self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
-        #     a_min=0.1, a_max=1), dtype=np.float32)
+        return np.array(np.clip(
+            self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
+            a_min=0.2, a_max=1), dtype=np.float32)
 
         # 信道增益不变，算法是否有效
-        return np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
+        # return np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
         # 第二种，均匀分布
         # 第三种，随机游走
 

@@ -2,9 +2,11 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 # from stable_baselines3.common.evaluation import evaluate_policy
 from utils.evaluation import evaluate_policy
-
-from envs.rand_energy_v2_0 import SysEnv
+from envs.rand_energy_v1_3 import SysEnv
 import time
+import sys
+sys.path.append("/home/jack/lnj/sb3/src")
+import csv
 
 
 # Parallel environments
@@ -33,73 +35,32 @@ model = PPO(
     verbose=0)
 
 if __name__ == '__main__':
-    for i in range(50):
-
+    data_rewards = []
+    for i in range(500):
         print(f'第{i}次评估{time.ctime()}')
-        info = evaluate_policy(model.policy, make_vec_env(SysEnv, n_envs=2, seed=2), n_eval_episodes=2, deterministic=True)
+        info = evaluate_policy(model.policy, make_vec_env(SysEnv, n_envs=10, seed=2), n_eval_episodes=2, deterministic=True)
         mean_r = info['mean_reward']
         mean_data = info['mean_data']
         mean_penalty = info['mean_penalty']
         episode_datas = info['episode_datas']
         episode_rewards = info['episode_rewards']
         episode_penalties = info['episode_penalties']
-
+        data_rewards.append((mean_data, mean_r))
         print(f"mean_r:{mean_r},mean_data:{mean_data}, mean_penalty:{mean_penalty}")
         print(f"episode_rewards:{episode_rewards}\n"
               f"episode_datas:{episode_datas} \n"
               f"episode_penalties:{episode_penalties}")
 
         print(f'第{i}次训练{time.ctime()}')
-        model.learn(total_timesteps=512 * 20)
+        model.learn(total_timesteps=512 * 5)
 
-        current_time = time.strftime("%m%d_%H_%M", time.localtime())
-        print(current_time+'model_saved')
-        model.save(f'models/ppo/{current_time}')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    current_time = time.strftime("%m%d_%H_%M", time.localtime())
+    print(current_time + 'model_saved')
+    model.save(f'models/ppo/{current_time}')
+    with open('csv/ppo_data_rewards.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['mean_data', 'mean_reward'])
+        for data_reward in data_rewards:
+            writer.writerow(data_reward)
 
 
