@@ -1,11 +1,12 @@
+import sys
+sys.path.append("/home/jack/lnj/sb3/src")
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 # from stable_baselines3.common.evaluation import evaluate_policy
 from utils.evaluation import evaluate_policy
 from envs.rand_energy_v1_3 import SysEnv
 import time
-import sys
-sys.path.append("/home/jack/lnj/sb3/src")
+
 import csv
 
 

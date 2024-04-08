@@ -1,10 +1,11 @@
+import sys
+sys.path.append("/home/jack/lnj/sb3/src")
 import numpy as np
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.vec_env import SubprocVecEnv
-import sys
-sys.path.append("/home/jack/lnj/sb3/src")
+
 import csv
 # 数据
 
