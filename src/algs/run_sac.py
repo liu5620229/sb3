@@ -52,9 +52,10 @@ model = SAC(
 
 if __name__ == '__main__':
     data_rewards = []
+    n_envs=10
     for i in range(500):
         print(f'第{i}次评估{time.ctime()}')
-        info = evaluate_policy(model.policy, make_vec_env(SysEnv, n_envs=10, seed=2), n_eval_episodes=2,
+        info = evaluate_policy(model.policy, make_vec_env(SysEnv, n_envs=n_envs, seed=2), n_eval_episodes=n_envs,
                                deterministic=True)
         mean_r = info['mean_reward']
         mean_data = info['mean_data']
