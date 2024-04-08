@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     current_time = time.strftime("%m%d_%H_%M", time.localtime())
     print(current_time + 'model_saved')
-    model.save(f'models/ppo/{current_time}')
+    model.save(f'models/v2/sac/{current_time}')
     with open('csv/p2/sac_data_rewards.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['mean_data', 'mean_reward'])
