@@ -1,6 +1,6 @@
 import numpy as np
 from stable_baselines3.common.env_util import make_vec_env
-from envs.rand_energy_v2_0 import SysEnv
+from envs.rand_energy_v2_0_with_h_const import SysEnv
 import csv
 # 种子相同时，就算env_num变化，第0个生成的环境始终是一样的
 env_num = 10

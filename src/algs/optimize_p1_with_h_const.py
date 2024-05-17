@@ -1,7 +1,7 @@
 import cvxpy as cp
 import numpy as np
 from stable_baselines3.common.env_util import make_vec_env
-from envs.rand_energy_v1_3 import SysEnv
+from envs.rand_energy_v1_3_with_h_const import SysEnv
 import csv
 
 def single_max(vec_env, index):

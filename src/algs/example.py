@@ -1,4 +1,4 @@
-from envs.rand_energy_v1_0 import SensorGymEnv
+from envs.archived.rand_energy_v1_0 import SensorGymEnv
 import pandas as pd
 import numpy as np
 import random
