@@ -6,12 +6,13 @@ import pandas as pd
 episode_lenth = 512
 # 读取CSV文件
 hasty_p2 = pd.read_csv("../csv/hasty_p2.csv")
+ppo_p2 = pd.read_csv("../csv/p2/ppo_data_rewards.csv")
+sac_p2 = pd.read_csv("../csv/p2/sac_data_rewards.csv")
+
 m = hasty_p2['data'].mean()/episode_lenth
 hasty_p2 = [m]*500
 
 
-ppo_p2 = pd.read_csv("../csv/p2/ppo_data_rewards.csv")
-sac_p2 = pd.read_csv("../csv/p2/sac_data_rewards.csv")
 ppo_p2_data = ppo_p2['mean_data']/episode_lenth
 sac_p2_data = sac_p2['mean_data']/episode_lenth
 
@@ -20,7 +21,7 @@ sac_p2_data = sac_p2['mean_data']/episode_lenth
 plt.figure(figsize=(10, 6)) # 设置图表大小
 
 # 绘制曲线
-plt.plot(np.arange(0, 500, 1), hasty_p2, label='greedy', color='blue', linestyle='--', linewidth=2)
+plt.plot(np.arange(0, 500, 1), hasty_p2, label='hasty ', color='blue', linestyle='--', linewidth=2)
 plt.plot(np.arange(0, 500, 1), ppo_p2_data, label='ppo', color='green', linestyle='--', linewidth=2)
 plt.plot(np.arange(0, 500, 1), sac_p2_data, label='sac', color='orange', linestyle='--', linewidth=2)
 
