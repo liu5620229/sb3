@@ -8,8 +8,6 @@ import pandas as pd
 
 episode_lenth = 512
 # 读取CSV文件
-hasty_p1 = pd.read_csv("../csv/hasty_p1.csv")
-optimize_p1 = pd.read_csv("../csv/optimize_p1.csv")
 ppo_p1 = pd.read_csv("../csv/p1/ppo_data_rewards.csv")
 sac_p1 = pd.read_csv("../csv/p1/sac_data_rewards.csv")
 x_show_length=500
@@ -21,11 +19,8 @@ x_show_length=500
 # ppo_p1_reward = ppo_p1['mean_reward']/episode_lenth
 # sac_p1_reward = sac_p1['mean_reward']/episode_lenth
 
-#平均
-m = hasty_p1['data'].mean()
-hasty_p1 = [m]*x_show_length
-m = optimize_p1['data'].mean()
-optimize_p1 = [m]*x_show_length
+#累计
+
 ppo_p1_reward = ppo_p1['mean_reward'][:x_show_length]
 sac_p1_reward = sac_p1['mean_reward'][:x_show_length]
 #
@@ -40,12 +35,12 @@ plt.plot(np.arange(0, x_show_length, 1), sac_p1_reward, label='sac', color='oran
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 # 添加标题和标签
-plt.title('10个环境下的长期奖励的均值随迭代次数的变化', fontsize=16) # 添加标题
+# plt.title('10个测试episode的平均累计reward随迭代次数的变化', fontsize=16) # 添加标题
 plt.xlabel('迭代次数', fontsize=12) # x轴标签
-plt.ylabel('10个环境中的平均奖励', fontsize=12) # y轴标签
+plt.ylabel('平均reward', fontsize=12) # y轴标签
 
 # 添加图例
-plt.legend(loc='upper right', fontsize=10)
+plt.legend(loc='lower right', fontsize=10)
 
 # 显示网格线
 plt.grid(True)
@@ -53,9 +48,10 @@ plt.grid(True)
 # 设置坐标轴范围
 plt.xlim(0, x_show_length)
 # plt.ylim(-1, 1)
-
+plt.savefig('p1_reward.svg', format='svg')
 # 显示图表
 plt.show()
+
 
 
 
