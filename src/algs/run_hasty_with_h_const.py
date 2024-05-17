@@ -16,7 +16,7 @@ if __name__ == '__main__':
         # print(f'rewards:{rewards}')
         data = [info["data"] for info in infos]
         cum_data += data
-    with open('csv/hasty_p1.csv', mode='w', newline='') as file:
+    with open('csv/hasty_p1_with_h_const.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['num', 'data'])
         for i, data in enumerate(cum_data):

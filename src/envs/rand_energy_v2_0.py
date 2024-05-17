@@ -238,12 +238,12 @@ class SysEnv(gym.Env):
 
     def _random_gain_generate(self):
         # 第一种 正态分布
-        return np.array(np.clip(
-            self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
-            a_min=0.1, a_max=1), dtype=np.float32)
+        # return np.array(np.clip(
+        #     self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
+        #     a_min=0.1, a_max=1), dtype=np.float32)
 
         # 信道增益不变，算法是否有效
-        # return np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
+        return np.float32(0.5)*np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
         # 第二种，均匀分布
         # 第三种，随机游走
 

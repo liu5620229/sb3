@@ -26,7 +26,7 @@ while not dones.any():
     # print(f'data:{[info["data"] for info in infos]}')
     data = [info["data"] for info in infos]
     cum_data += data
-    with open('csv/hasty_p2.csv', mode='w', newline='') as file:
+    with open('csv/hasty_p2_with_h_const.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['num', 'data'])
         for i, data in enumerate(cum_data):
