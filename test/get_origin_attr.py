@@ -1,7 +1,7 @@
 import numpy as np
 from stable_baselines3.common.env_util import make_vec_env
 
-from envs.rand_energy_v1_0 import SysEnv
+from envs.archived.rand_energy_v1_0 import SysEnv
 
 vec_env = make_vec_env(SysEnv, n_envs=1, seed=2)
 vec_env.reset()

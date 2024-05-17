@@ -8,7 +8,7 @@ from gymnasium import spaces
 
 class SysEnv(gym.Env):
 
-    def __init__(self, max_energy=20, time_interval=1, max_episode_steps=512, render_mode=None):
+    def __init__(self, max_energy=100, time_interval=1, max_episode_steps=512, render_mode=None):
         self.MAX_ENERGY = np.float32(max_energy)
         self.time_interval = np.float32(time_interval)
 
@@ -147,12 +147,12 @@ class SysEnv(gym.Env):
 
     def _random_gain_generate(self):
         # 第一种 正态分布
-        # return np.array(np.clip(
-        #     self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
-        #     a_min=0.1, a_max=1), dtype=np.float32)
+        return np.array(np.clip(
+            self.np_random.normal(0.5, 0.25, self._max_episode_steps+1),
+            a_min=0.1, a_max=1), dtype=np.float32)
 
         # 信道增益不变，算法是否有效
-        return np.float32(0.5)*np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
+        # return np.float32(0.5)*np.ones(shape=(self._max_episode_steps+1),dtype=np.float32)
         # 第二种，均匀分布
         # 第三种，随机游走
 
