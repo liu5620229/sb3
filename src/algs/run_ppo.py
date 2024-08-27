@@ -54,7 +54,7 @@ if __name__ == '__main__':
               f"episode_penalties:{episode_penalties}")
 
         print(f'第{i}次训练{time.ctime()}')
-        model.learn(total_timesteps=512 * 20)
+        model.learn(total_timesteps=512 * 5)
 
     current_time = time.strftime("%m%d_%H_%M", time.localtime())
     print(current_time + 'model_saved')

@@ -31,11 +31,12 @@ plt.plot(np.arange(0, 500, 1), sac_p2_data, label='sac', color='orange', linesty
 plt.rcParams['font.sans-serif'] = ['SimHei']
 # 添加标题和标签
 # plt.title('10个环境下的长期平均吞吐量的均值随迭代次数的变化', fontsize=16) # 添加标题
-plt.xlabel('迭代次数', fontsize=12) # x轴标签
-plt.ylabel('10个环境中的平均吞吐量', fontsize=12) # y轴标签
-
+plt.xlabel('迭代次数', fontsize=20) # x轴标签
+plt.ylabel('平均吞吐量（bits）', fontsize=20) # y轴标签
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
 # 添加图例
-plt.legend(loc='lower right', fontsize=10)
+plt.legend(loc='lower right', fontsize=18)
 
 # 显示网格线
 plt.grid(True)
