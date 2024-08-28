@@ -85,9 +85,9 @@ class SysEnv(gym.Env):
             buffer_overflow = np.clip(buffer_overflow, a_min=None, a_max=self.MAX_ENERGY/24,dtype=np.float32)
             new_rest_energy = self.MAX_ENERGY
 
-
-        penalty = np.log2(1 + excessive_amount + buffer_overflow, dtype=np.float32)
-        reward = data - penalty  # 按照D=log2 (1+p)惩罚
+        penalty = np.log2(1 + (excessive_amount*1 + buffer_overflow)*0.25, dtype=np.float32)
+        #todo 是否开启惩罚
+        reward = data - penalty * 1  # 按照D=log2 (1+p)惩罚
 
         #与状态有关的计算设置成float32
         # assert new_rest_energy >= 0, '精度出现错误，rest_energy<0'

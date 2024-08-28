@@ -154,9 +154,9 @@ class SysEnv(gym.Env):
         # 将能量惩罚转换到数据，与数据同一量纲
         # todo 或许也可以直接用能量进行惩罚，只要进行裁剪就好，这样可以避免对较小的违法动作的惩罚值太大，不过在数据量上限较小的情况下，没有太大意义。
 
-        energy_constraint_penalty = self.power_to_data(energy_excessive_amount, 1.0)
+        energy_constraint_penalty = self.power_to_data(energy_excessive_amount, 0.5)
         data_constraint_penalty = data_excessive_amount # 直接把数据超出量作为惩罚，已经裁剪过
-        energy_buffer_overflow_penalty = self.power_to_data(energy_buffer_overflow, 1.0) * self._rest_data * 0.3
+        energy_buffer_overflow_penalty = self.power_to_data(energy_buffer_overflow, 0.5) * self._rest_data * 0.3
         
         # if energy_buffer_overflow_penalty > 2:
         #     print("能量溢出惩罚可能过大")
